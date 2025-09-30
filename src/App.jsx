@@ -103,13 +103,22 @@ function App() {
                   .replace(/\u0000/g, '') // 移除空字符
                   .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // 移除控制字符
         
-        // 解析CSV
-        Papa.parse(text, {
-          header: true,
-          skipEmptyLines: true,
-          encoding: 'UTF-8'
-        }, (results) => {
-          data = results.data
+        // 解析CSV - 使用Promise包裝Papa.parse
+        data = await new Promise((resolve, reject) => {
+          Papa.parse(text, {
+            header: true,
+            skipEmptyLines: true,
+            encoding: 'UTF-8',
+            complete: (results) => {
+              if (results.errors && results.errors.length > 0) {
+                console.warn('CSV解析警告:', results.errors)
+              }
+              resolve(results.data)
+            },
+            error: (error) => {
+              reject(error)
+            }
+          })
         })
       } else if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
         // 處理Excel檔案
